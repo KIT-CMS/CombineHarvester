@@ -107,10 +107,11 @@ int main(int argc, char **argv) {
     chns = {"mt", "et", "tt", "em"};
 
   // Define background processes
+  map<string, VString> sig_procs;
   map<string, VString> bkg_procs;
   VString bkgs, bkgs_em;
-  bkgs = {"W", "ZTT", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL", "WH125", "ZH125", "ttH125"};
-  bkgs_em = {"W", "ZTT", "QCD", "ZL", "TT", "VV", "ST", "WH125", "ZH125", "ttH125","ggHWW125","qqHWW125"};
+  bkgs = {"W", "ZTT", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL"};
+  bkgs_em = {"W", "ZTT", "QCD", "ZL", "TT", "VV", "ST"};
   if(embedding){
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "ZTT"), bkgs.end());
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "TTT"), bkgs.end());
@@ -241,14 +242,16 @@ int main(int argc, char **argv) {
   else throw std::runtime_error("Given categorization is not known.");
 
   // Specify signal processes and masses
-  vector<string> sig_procs;
+  vector<string> sigs;
+  vector<string> sigs_em;
+  sigs_em = {"ggH", "qqH", "WH", "ZH", "ttH","ggH_hww","qqH_hww"};
   // STXS stage 0: ggH and VBF processes
-  if(stxs_signals == "stxs_stage0") sig_procs = {"ggH", "qqH"};
+  if(stxs_signals == "stxs_stage0") sigs = {"ggH", "qqH", "WH", "ZH", "ttH"};
   // STXS stage 1: Splits of ggH and VBF processes
   // References:
   // - https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHXSWGFiducialAndSTXS
   // - https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHXSWG2
-  else if(stxs_signals == "stxs_stage1") sig_procs = {
+  else if(stxs_signals == "stxs_stage1") sigs = {
       // ggH
       "ggH_0J", "ggH_1J_PTH_0_60", "ggH_1J_PTH_60_120", "ggH_1J_PTH_120_200",
       "ggH_1J_PTH_GT200", "ggH_GE2J_PTH_0_60", "ggH_GE2J_PTH_60_120",
@@ -258,6 +261,10 @@ int main(int argc, char **argv) {
       "qqH_VBFTOPO_JET3VETO", "qqH_VBFTOPO_JET3", "qqH_REST",
       "qqH_PTJET1_GT200", "qqH_VH2JET"};
   else throw std::runtime_error("Given STXS signals are not known.");
+  sig_procs["et"] = sigs;
+  sig_procs["mt"] = sigs;
+  sig_procs["tt"] = sigs;
+  sig_procs["em"] = sigs_em;
   vector<string> masses = {"125"};
 
   // Create combine harverster object
@@ -273,7 +280,7 @@ int main(int argc, char **argv) {
     cb.AddObservations({"*"}, {"htt"}, {era_tag}, {chn}, cats[chn]);
     cb.AddProcesses({"*"}, {"htt"}, {era_tag}, {chn}, bkg_procs[chn], cats[chn],
                     false);
-    cb.AddProcesses(masses, {"htt"}, {era_tag}, {chn}, sig_procs, cats[chn],
+    cb.AddProcesses(masses, {"htt"}, {era_tag}, {chn}, sig_procs[chn], cats[chn],
                     true);
   }
 
@@ -285,10 +292,16 @@ int main(int argc, char **argv) {
     cb.cp().channel({chn}).backgrounds().ExtractShapes(
         input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
         "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC");
-    cb.cp().channel({chn}).process(sig_procs).ExtractShapes(
+    cb.cp().channel({chn}).process(sig_procs["mt"]).ExtractShapes(
         input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
         "$BIN/$PROCESS$MASS", "$BIN/$PROCESS$MASS_$SYSTEMATIC");
   }
+  cb.cp().channel({"em"}).process({"ggH_hww"}).ExtractShapes(
+        input_dir["em"] + "htt_em.inputs-sm-" + era_tag + postfix + ".root",
+        "$BIN/ggHWW$MASS", "$BIN/ggHWW$MASS_$SYSTEMATIC");
+  cb.cp().channel({"em"}).process({"qqH_hww"}).ExtractShapes(
+        input_dir["em"] + "htt_em.inputs-sm-" + era_tag + postfix + ".root",
+        "$BIN/qqHWW$MASS", "$BIN/qqHWW$MASS_$SYSTEMATIC");
 
   // Delete processes with 0 yield
   cb.FilterProcs([&](ch::Process *p) {
@@ -536,6 +549,8 @@ int main(int argc, char **argv) {
                    .SetFixNorm(false);
     bbb.AddBinByBin(cb.cp().backgrounds(), cb);
   }
+  
+  cb.cp().channel({"em"}).RenameSystematic(cb,"norm_ff_tt_dm0_njet0_stat","norm_ff_tt_dm0_mt_stat");
 
 
   // This function modifies every entry to have a standardised bin name of
