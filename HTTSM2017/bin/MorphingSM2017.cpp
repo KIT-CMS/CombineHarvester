@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
   bool classic_bbb = false;
   bool binomial_bbb = false;
   bool verbose = false;
-  string stxs_signals = "stxs_stage0"; // "stxs_stage0" or "stxs_stage1"
-  string categories = "stxs_stage0"; // "stxs_stage0", "stxs_stage1" or "gof"
+  string stxs_signals = "stxs_stage0"; // "stxs_stage0" or "stxs_stage1p1"
+  string categories = "stxs_stage0"; // "stxs_stage0", "stxs_stage1p1" or "gof"
   string gof_category_name = "gof";
   int era = 2016; // 2016 or 2017
   po::variables_map vm;
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
     };
   }
   // STXS stage 1 categories (optimized on STXS stage 1 splits of ggH and VBF)
-  else if(categories == "stxs_stage1"){
+  else if(categories == "stxs_stage1p1"){
     cats["et"] = {
         { 1, "et_ggh_unrolled"},
         { 2, "et_qqh_unrolled"},
@@ -371,53 +371,56 @@ int main(int argc, char **argv) {
     }
   }
 
-  // Rebin categories to predefined binning
+  if (categories != "gof")
+  {
+    // Rebin categories to predefined binning for
 
-  // Rebin background categories
-  for (auto b : cb.cp().bin_set()) {
-    TString bstr = b;
-    if (bstr.Contains("unrolled")) continue;
-    std::cout << "[INFO] Rebin background bin " << b << "\n";
-    auto shape = cb.cp().bin({b}).backgrounds().GetShape();
-    auto min = shape.GetBinLowEdge(1);
-    cb.cp().bin({b}).VariableRebin({min, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0});
-  }
-  // Rebin ggh categories
-  for (auto b : cb.cp().bin_set()) {
-    TString bstr = b;
-    if (bstr.Contains("ggh_unrolled")) {
-      std::cout << "[INFO] Rebin ggh signal bin " << b << "\n";
+    // Rebin background categories
+    for (auto b : cb.cp().bin_set()) {
+      TString bstr = b;
+      if (bstr.Contains("unrolled")) continue;
+      std::cout << "[INFO] Rebin background bin " << b << "\n";
       auto shape = cb.cp().bin({b}).backgrounds().GetShape();
       auto min = shape.GetBinLowEdge(1);
-      auto range = 1.0 - min;
-      vector<double> raw_binning = {0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 1.0};
-      vector<double> binning = {min};
-      int n_stage1cats = 9;
-      if (bstr.Contains("et_")||bstr.Contains("mt_")) n_stage1cats = 7;
-      for (int i=0; i<n_stage1cats; i++){
-        for (auto border : raw_binning) {
-          binning.push_back(i*range+border);
-        }
-      }
-      cb.cp().bin({b}).VariableRebin(binning);
+      cb.cp().bin({b}).VariableRebin({min, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0});
     }
-  }
-  // Rebin qqh categories
-  for (auto b : cb.cp().bin_set()) {
-    TString bstr = b;
-    if (bstr.Contains("qqh_unrolled")) {
-      std::cout << "[INFO] Rebin qqh signal bin " << b << "\n";
-      auto shape = cb.cp().bin({b}).backgrounds().GetShape();
-      auto min = shape.GetBinLowEdge(1);
-      auto range = 1.0 - min;
-      vector<double> raw_binning = {0.4, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.90, 0.95, 1.0};
-      vector<double> binning = {min};
-      for (int i=0; i<5; i++){
-        for (auto border : raw_binning) {
-          binning.push_back(i*range+border);
+    // Rebin ggh categories
+    for (auto b : cb.cp().bin_set()) {
+      TString bstr = b;
+      if (bstr.Contains("ggh_unrolled")) {
+        std::cout << "[INFO] Rebin ggh signal bin " << b << "\n";
+        auto shape = cb.cp().bin({b}).backgrounds().GetShape();
+        auto min = shape.GetBinLowEdge(1);
+        auto range = 1.0 - min;
+        vector<double> raw_binning = {0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 1.0};
+        vector<double> binning = {min};
+        int n_stage1cats = 9;
+        if (bstr.Contains("et_")||bstr.Contains("mt_")) n_stage1cats = 7;
+        for (int i=0; i<n_stage1cats; i++){
+          for (auto border : raw_binning) {
+            binning.push_back(i*range+border);
+          }
         }
+        cb.cp().bin({b}).VariableRebin(binning);
       }
-      cb.cp().bin({b}).VariableRebin(binning);
+    }
+    // Rebin qqh categories
+    for (auto b : cb.cp().bin_set()) {
+      TString bstr = b;
+      if (bstr.Contains("qqh_unrolled")) {
+        std::cout << "[INFO] Rebin qqh signal bin " << b << "\n";
+        auto shape = cb.cp().bin({b}).backgrounds().GetShape();
+        auto min = shape.GetBinLowEdge(1);
+        auto range = 1.0 - min;
+        vector<double> raw_binning = {0.4, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.90, 0.95, 1.0};
+        vector<double> binning = {min};
+        for (int i=0; i<5; i++){
+          for (auto border : raw_binning) {
+            binning.push_back(i*range+border);
+          }
+        }
+        cb.cp().bin({b}).VariableRebin(binning);
+      }
     }
   }
 

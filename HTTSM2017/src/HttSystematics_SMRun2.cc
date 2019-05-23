@@ -87,6 +87,19 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
       .AddSyst(cb, "lumi_$ERA", "lnN", SystMap<>::init(lumi_unc));
 
   // ##########################################################################
+  // Uncertainty: Prefiring
+  // References:
+  // - "https://twiki.cern.ch/twiki/bin/viewauth/CMS/L1ECALPrefiringWeightRecipe"
+  // Notes:
+  // - FIXME: assumed as uncorrelated accross the years for now, what is the recommendation?
+  // ##########################################################################
+
+  cb.cp()
+      .channel({"et", "mt", "tt", "em"})
+      .process(mc_processes)
+      .AddSyst(cb, "CMS_prefiring_$ERA", "shape", SystMap<>::init(1.00));
+
+  // ##########################################################################
   // Uncertainty: Trigger efficiency
   // References:
   // Notes:
@@ -420,8 +433,10 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
   // ##########################################################################
   // Uncertainty: Electron energy scale
   // References:
+  // - MC: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaRunIIRecommendations#E_gamma_Energy_Corrections
+  // - Embedding: ?
   // Notes:
-  // - FIXME: References?
+  // - FIXME: References for embedding missing, need proper correlation accross years for mc, see here: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaRunIIRecommendations#Recommendations_on_Combining_Sys
   // ##########################################################################
 
   // MC uncorrelated uncertainty
@@ -429,21 +444,29 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
   cb.cp()
       .channel({"em", "et"})
       .process(mc_processes)
-      .AddSyst(cb, "CMS_scale_mc_e", "shape", SystMap<>::init(0.71));
+      .AddSyst(cb, "CMS_scale_mc_e", "shape", SystMap<>::init(1.00));
+      //.AddSyst(cb, "CMS_scale_mc_e", "shape", SystMap<>::init(0.71));
+
+  cb.cp()
+      .channel({"em", "et"})
+      .process(mc_processes)
+      .AddSyst(cb, "CMS_reso_mc_e", "shape", SystMap<>::init(1.00));
+      //.AddSyst(cb, "CMS_scale_mc_e", "shape", SystMap<>::init(0.71));
       
   // Embedded uncorrelated uncertainty
       
   cb.cp()
       .channel({"em", "et"})
       .process({"EMB"})
-      .AddSyst(cb, "CMS_scale_emb_e", "shape", SystMap<>::init(0.71));
+      .AddSyst(cb, "CMS_scale_emb_e", "shape", SystMap<>::init(1.00));
+      //.AddSyst(cb, "CMS_scale_emb_e", "shape", SystMap<>::init(0.71));
 
   // MC + embedded correlated uncertainty
 
-  cb.cp()
-      .channel({"em", "et"})
-      .process(JoinStr({mc_processes, {"EMB"}}))
-      .AddSyst(cb, "CMS_scale_e", "shape", SystMap<>::init(0.71));
+  //cb.cp()
+  //    .channel({"em", "et"})
+  //    .process(JoinStr({mc_processes, {"EMB"}}))
+  //    .AddSyst(cb, "CMS_scale_e", "shape", SystMap<>::init(0.71));
 
 
   // ##########################################################################
