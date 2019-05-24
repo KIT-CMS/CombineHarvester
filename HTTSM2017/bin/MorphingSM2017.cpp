@@ -110,13 +110,16 @@ int main(int argc, char **argv) {
   map<string, VString> bkg_procs;
   VString bkgs, bkgs_em;
   bkgs = {"W", "ZTT", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL", "WH125", "ZH125", "ttH125"};
-  bkgs_em = {"W", "ZTT", "QCD", "ZL", "TT", "VV", "ST", "WH125", "ZH125", "ttH125","ggHWW125","qqHWW125"};
+  bkgs_em = {"W", "ZTT", "TTT","VVT", "QCD", "ZL", "TTL", "VVL", "WH125", "ZH125", "ttH125"};
+  //bkgs_em = {"W", "ZTT", "QCD", "ZL", "TT", "VV", "ST", "WH125", "ZH125", "ttH125","ggHWW125","qqHWW125"};
   if(embedding){
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "ZTT"), bkgs.end());
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "TTT"), bkgs.end());
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "VVT"), bkgs.end());
     bkgs = JoinStr({bkgs,{"EMB"}});
     bkgs_em.erase(std::remove(bkgs_em.begin(), bkgs_em.end(), "ZTT"), bkgs_em.end());
+    bkgs_em.erase(std::remove(bkgs_em.begin(), bkgs_em.end(), "TTT"), bkgs_em.end());
+    bkgs_em.erase(std::remove(bkgs_em.begin(), bkgs_em.end(), "VVT"), bkgs_em.end());
     bkgs_em = JoinStr({bkgs_em,{"EMB"}});
   }
   if(jetfakes){
@@ -180,8 +183,8 @@ int main(int argc, char **argv) {
         {13, "em_tt"},
         {14, "em_ss"},
         {16, "em_misc"},
-        {18, "em_st"},
-        {19, "em_vv"},
+//        {18, "em_st"},
+        {19, "em_db"},
     };
   }
   // STXS stage 1 categories (optimized on STXS stage 1 splits of ggH and VBF)
@@ -220,8 +223,8 @@ int main(int argc, char **argv) {
         {13, "em_tt"},
         {14, "em_ss"},
         {16, "em_misc"},
-        {18, "em_st"},
-        {19, "em_vv"},
+//        {18, "em_st"},
+        {19, "em_db"},
     };
   }
   else if(categories == "gof"){
@@ -244,19 +247,41 @@ int main(int argc, char **argv) {
   vector<string> sig_procs;
   // STXS stage 0: ggH and VBF processes
   if(stxs_signals == "stxs_stage0") sig_procs = {"ggH", "qqH"};
-  // STXS stage 1: Splits of ggH and VBF processes
+  // STXS stage 1.1: Splits of ggH and VBF processes
   // References:
   // - https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHXSWGFiducialAndSTXS
   // - https://twiki.cern.ch/twiki/bin/view/LHCPhysics/LHCHXSWG2
-  else if(stxs_signals == "stxs_stage1") sig_procs = {
+  // - https://gitlab.cern.ch/LHCHIGGSXS/LHCHXSWG2/STXS
+  else if(stxs_signals == "stxs_stage1p1") sig_procs = {
       // ggH
-      "ggH_0J", "ggH_1J_PTH_0_60", "ggH_1J_PTH_60_120", "ggH_1J_PTH_120_200",
-      "ggH_1J_PTH_GT200", "ggH_GE2J_PTH_0_60", "ggH_GE2J_PTH_60_120",
-      "ggH_GE2J_PTH_120_200", "ggH_GE2J_PTH_GT200", "ggH_VBFTOPO_JET3VETO",
-      "ggH_VBFTOPO_JET3",
+      "ggH_GG2H_FWDH",
+      "ggH_GG2H_PTH_GT200",
+      "ggH_GG2H_0J_PTH_0_10",
+      "ggH_GG2H_0J_PTH_GT10",
+      "ggH_GG2H_1J_PTH_0_60",
+      "ggH_GG2H_1J_PTH_60_120",
+      "ggH_GG2H_1J_PTH_120_200",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_0_60",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_60_120",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_120_200",
+      "ggH_GG2H_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_0_25",
+      "ggH_GG2H_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_GT25",
+      "ggH_GG2H_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_0_25",
+      "ggH_GG2H_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_GT25",
       // VBF
-      "qqH_VBFTOPO_JET3VETO", "qqH_VBFTOPO_JET3", "qqH_REST",
-      "qqH_PTJET1_GT200", "qqH_VH2JET"};
+      "qqH_QQ2HQQ_FWDH",
+      "qqH_QQ2HQQ_0J",
+      "qqH_QQ2HQQ_1J",
+      "qqH_QQ2HQQ_GE2J_MJJ_0_60",
+      "qqH_QQ2HQQ_GE2J_MJJ_60_120",
+      "qqH_QQ2HQQ_GE2J_MJJ_120_350",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT350_PTH_GT200",
+      "qqH_QQ2HQQ_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_0_25",
+      "qqH_QQ2HQQ_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_GT25",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_0_25",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_GT25"
+  };
+
   else throw std::runtime_error("Given STXS signals are not known.");
   vector<string> masses = {"125"};
 
