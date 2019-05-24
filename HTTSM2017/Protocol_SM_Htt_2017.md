@@ -20,7 +20,7 @@ git checkout v7.0.12
 cd ../..
 
 # Clone CombineHarvester
-git clone ssh://git@github.com/KIT-CMS/CombineHarvester CombineHarvester -b SMHTT2017-dev
+git clone ssh://git@github.com/KIT-CMS/CombineHarvester CombineHarvester -b SMHTTLegacy-dev
 
 # Build
 scram b -j 24
