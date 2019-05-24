@@ -48,6 +48,8 @@ int main(int argc, char **argv) {
   bool regional_jec = true;
   bool ggh_wg1 = true;
   bool auto_rebin = false;
+  bool rebin_categories = true;
+  bool manual_rebin_for_yields = false;
   bool real_data = false;
   bool jetfakes = true;
   bool embedding = false;
@@ -69,6 +71,8 @@ int main(int argc, char **argv) {
       ("postfix", po::value<string>(&postfix)->default_value(postfix))
       ("channel", po::value<string>(&chan)->default_value(chan))
       ("auto_rebin", po::value<bool>(&auto_rebin)->default_value(auto_rebin))
+      ("rebin_categories", po::value<bool>(&rebin_categories)->default_value(rebin_categories))
+      ("manual_rebin_for_yields", po::value<bool>(&manual_rebin_for_yields)->default_value(manual_rebin_for_yields))
       ("regional_jec", po::value<bool>(&regional_jec)->default_value(regional_jec))
       ("ggh_wg1", po::value<bool>(&ggh_wg1)->default_value(ggh_wg1))
       ("real_data", po::value<bool>(&real_data)->default_value(real_data))
@@ -345,7 +349,7 @@ int main(int argc, char **argv) {
     }
     return false;
   });
-  
+
   int count_lnN = 0;
   int count_all = 0;
   cb.cp().ForEachSyst([&count_lnN, &count_all](ch::Systematic *s) {
@@ -396,10 +400,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (categories != "gof")
-  {
-    // Rebin categories to predefined binning for
-
+  // Rebin categories to predefined binning for binning
+  if (rebin_categories) {
     // Rebin background categories
     for (auto b : cb.cp().bin_set()) {
       TString bstr = b;
@@ -543,6 +545,13 @@ int main(int argc, char **argv) {
           });
         }
       }
+    }
+  }
+
+  if(manual_rebin_for_yields) {
+    for(auto b : cb.cp().bin_set()) {
+      std::cout << "Rebinning by hand for bin: " << b <<  std::endl;
+      cb.cp().bin({b}).VariableRebin({0.0,1.0});
     }
   }
 
