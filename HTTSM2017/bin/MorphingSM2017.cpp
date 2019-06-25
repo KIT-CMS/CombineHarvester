@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
   bool classic_bbb = false;
   bool binomial_bbb = false;
   bool verbose = false;
+  bool remove_empty_categories = false;
   string stxs_signals = "stxs_stage0"; // "stxs_stage0" or "stxs_stage1p1"
   string categories = "stxs_stage0"; // "stxs_stage0", "stxs_stage1p1" or "gof"
   string gof_category_name = "gof";
@@ -77,6 +78,7 @@ int main(int argc, char **argv) {
       ("ggh_wg1", po::value<bool>(&ggh_wg1)->default_value(ggh_wg1))
       ("real_data", po::value<bool>(&real_data)->default_value(real_data))
       ("verbose", po::value<bool>(&verbose)->default_value(verbose))
+      ("remove_empty_categories", po::value<bool>(&remove_empty_categories)->default_value(remove_empty_categories))
       ("output_folder", po::value<string>(&output_folder)->default_value(output_folder))
       ("stxs_signals", po::value<string>(&stxs_signals)->default_value(stxs_signals))
       ("categories", po::value<string>(&categories)->default_value(categories))
@@ -151,6 +153,7 @@ int main(int argc, char **argv) {
 
   // Define categories
   map<string, Categories> cats;
+  std::vector<std::string> cats_to_keep; // will be used later for the card writer
   // STXS stage 0 categories (optimized on ggH and VBF)
   if(categories == "stxs_stage0"){
     cats["et"] = {
@@ -194,55 +197,90 @@ int main(int argc, char **argv) {
   // STXS stage 1 categories (optimized on STXS stage 1 splits of ggH and VBF)
   else if(categories == "stxs_stage1p1"){
     cats["et"] = {
-        { 1, "et_ggh_unrolled"},
-        { 2, "et_qqh_unrolled"},
-        {11, "et_w"},
-        {12, "et_ztt"},
-        {13, "et_tt"},
-        {14, "et_ss"},
-        {15, "et_zll"},
-        {16, "et_misc"},
+        {100, "et_ggh_100"},
+        {101, "et_ggh_101"},
+        {102, "et_ggh_102"},
+        {103, "et_ggh_103"},
+        {104, "et_ggh_104"},
+        {105, "et_ggh_105"},
+        {200, "et_qqh_200"},
+        {201, "et_qqh_201"},
+        {202, "et_qqh_202"},
+        {203, "et_qqh_203"},
+        {204, "et_qqh_204"},
+        { 11, "et_w"},
+        { 12, "et_ztt"},
+        { 13, "et_tt"},
+        { 14, "et_ss"},
+        { 15, "et_zll"},
+        { 16, "et_misc"},
     };
      cats["mt"] = {
-        { 1, "mt_ggh_unrolled"},
-        { 2, "mt_qqh_unrolled"},
-        {11, "mt_w"},
-        {12, "mt_ztt"},
-        {13, "mt_tt"},
-        {14, "mt_ss"},
-        {15, "mt_zll"},
-        {16, "mt_misc"},
+        {100, "mt_ggh_100"},
+        {101, "mt_ggh_101"},
+        {102, "mt_ggh_102"},
+        {103, "mt_ggh_103"},
+        {104, "mt_ggh_104"},
+        {105, "mt_ggh_105"},
+        {200, "mt_qqh_200"},
+        {201, "mt_qqh_201"},
+        {202, "mt_qqh_202"},
+        {203, "mt_qqh_203"},
+        {204, "mt_qqh_204"},
+        { 11, "mt_w"},
+        { 12, "mt_ztt"},
+        { 13, "mt_tt"},
+        { 14, "mt_ss"},
+        { 15, "mt_zll"},
+        { 16, "mt_misc"},
     };
      cats["tt"] = {
-        { 1, "tt_ggh_unrolled"},
-        { 2, "tt_qqh_unrolled"},
-        {12, "tt_ztt"},
-        {16, "tt_misc"},
-        {17, "tt_noniso"},
+        {100, "tt_ggh_100"},
+        {101, "tt_ggh_101"},
+        {102, "tt_ggh_102"},
+        {103, "tt_ggh_103"},
+        {104, "tt_ggh_104"},
+        {105, "tt_ggh_105"},
+        {200, "tt_qqh_200"},
+        {201, "tt_qqh_201"},
+        {202, "tt_qqh_202"},
+        {203, "tt_qqh_203"},
+        {204, "tt_qqh_204"},
+        { 12, "tt_ztt"},
+        { 16, "tt_misc"},
+        { 17, "tt_noniso"},
     };
      cats["em"] = {
-        { 1, "em_ggh_unrolled"},
-        { 2, "em_qqh_unrolled"},
-        {12, "em_ztt"},
-        {13, "em_tt"},
-        {14, "em_ss"},
-        {16, "em_misc"},
-//        {18, "em_st"},
-        {19, "em_db"},
+        {100, "em_ggh_100"},
+        {101, "em_ggh_101"},
+        {102, "em_ggh_102"},
+        {103, "em_ggh_103"},
+        {104, "em_ggh_104"},
+        {105, "em_ggh_105"},
+        {200, "em_qqh_200"},
+        {201, "em_qqh_201"},
+        {202, "em_qqh_202"},
+        {203, "em_qqh_203"},
+        {204, "em_qqh_204"},
+        { 12, "em_ztt"},
+        { 13, "em_tt"},
+        { 14, "em_ss"},
+        { 16, "em_misc"},
+        { 19, "em_db"},
     };
   }
   else if(categories == "gof"){
     cats["et"] = {
-        { 100, gof_category_name.c_str() },
+        {300, gof_category_name.c_str() },
     };
     cats["mt"] = {
-        { 100, gof_category_name.c_str() },
+        {300, gof_category_name.c_str() },
     };
     cats["tt"] = {
-        { 100, gof_category_name.c_str() },
+        {300, gof_category_name.c_str() },
     };
     cats["em"] = {
-        { 100, gof_category_name.c_str() },
+        {300, gof_category_name.c_str() },
     };
   }
   else throw std::runtime_error("Given categorization is not known.");
@@ -392,10 +430,28 @@ int main(int argc, char **argv) {
   if (!real_data) {
     for (auto b : cb.cp().bin_set()) {
       std::cout << "[INFO] Replacing data with asimov in bin " << b << "\n";
+      auto background_shape = cb.cp().bin({b}).backgrounds().GetShape();
+      auto signal_shape = cb.cp().bin({b}).signals().GetShape();
+      auto total_procs_shape = cb.cp().bin({b}).data().GetShape();
+      total_procs_shape.Scale(0.0);
+      bool no_signal = signal_shape.GetNbinsX() == 1 and signal_shape.Integral() == 0.0;
+      bool no_background = background_shape.GetNbinsX() == 1 and background_shape.Integral() == 0.0;
+      if(no_signal && no_background)
+      {
+        std::cout << "\t[WARNING] No signal  and no background available in bin " << b << std::endl;
+      }
+      else if(no_background)
+      {
+        std::cout << "\t[WARNING] No background available in bin " << b << std::endl;
+        total_procs_shape = total_procs_shape + signal_shape;
+      }
+      else if(no_signal)
+      {
+        total_procs_shape = total_procs_shape + background_shape;
+        std::cout << "\t[WARNING] No signal available in bin " << b << std::endl;
+      }
       cb.cp().bin({b}).ForEachObs([&](ch::Observation *obs) {
-        obs->set_shape(cb.cp().bin({b}).backgrounds().GetShape() +
-                           cb.cp().bin({b}).signals().GetShape(),
-                       true);
+        obs->set_shape(total_procs_shape,true);
       });
     }
   }
@@ -405,48 +461,30 @@ int main(int argc, char **argv) {
     // Rebin background categories
     for (auto b : cb.cp().bin_set()) {
       TString bstr = b;
-      if (bstr.Contains("unrolled")) continue;
+      if (bstr.Contains("ggh") || bstr.Contains("qqh")) continue;
       std::cout << "[INFO] Rebin background bin " << b << "\n";
       auto shape = cb.cp().bin({b}).backgrounds().GetShape();
       auto min = shape.GetBinLowEdge(1);
       cb.cp().bin({b}).VariableRebin({min, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0});
     }
-    // Rebin ggh categories
+    // Rebin ggh stage 1.1 categories
     for (auto b : cb.cp().bin_set()) {
       TString bstr = b;
-      if (bstr.Contains("ggh_unrolled")) {
+      if (bstr.Contains("ggh_10")) {
         std::cout << "[INFO] Rebin ggh signal bin " << b << "\n";
         auto shape = cb.cp().bin({b}).backgrounds().GetShape();
         auto min = shape.GetBinLowEdge(1);
-        auto range = 1.0 - min;
-        vector<double> raw_binning = {0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 1.0};
-        vector<double> binning = {min};
-        int n_stage1cats = 9;
-        if (bstr.Contains("et_")||bstr.Contains("mt_")) n_stage1cats = 7;
-        for (int i=0; i<n_stage1cats; i++){
-          for (auto border : raw_binning) {
-            binning.push_back(i*range+border);
-          }
-        }
-        cb.cp().bin({b}).VariableRebin(binning);
+        cb.cp().bin({b}).VariableRebin({min, 0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 1.0});
       }
     }
-    // Rebin qqh categories
+    // Rebin qqh stage 1.1 categories
     for (auto b : cb.cp().bin_set()) {
       TString bstr = b;
-      if (bstr.Contains("qqh_unrolled")) {
+      if (bstr.Contains("qqh_20")) {
         std::cout << "[INFO] Rebin qqh signal bin " << b << "\n";
         auto shape = cb.cp().bin({b}).backgrounds().GetShape();
         auto min = shape.GetBinLowEdge(1);
-        auto range = 1.0 - min;
-        vector<double> raw_binning = {0.4, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.90, 0.95, 1.0};
-        vector<double> binning = {min};
-        for (int i=0; i<5; i++){
-          for (auto border : raw_binning) {
-            binning.push_back(i*range+border);
-          }
-        }
-        cb.cp().bin({b}).VariableRebin(binning);
+        cb.cp().bin({b}).VariableRebin({min, 0.4, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.90, 0.95, 1.0});
       }
     }
   }
@@ -477,7 +515,6 @@ int main(int argc, char **argv) {
   // Perform auto-rebinning
   if (auto_rebin) {
     const auto threshold = 1.0;
-    const auto tolerance = 1e-4;
     for (auto b : cb.cp().bin_set()) {
       std::cout << "[INFO] Rebin bin " << b << "\n";
       // Get shape of this category with sum of backgrounds
@@ -488,65 +525,38 @@ int main(int argc, char **argv) {
       binning.push_back(shape.GetBinLowEdge(num_bins + 1));
       // Now, go backwards through bins (from right to left) and merge a bin if
       // the background yield is below a given threshold.
-      auto offset = shape.GetBinLowEdge(1);
-      auto width = 1.0 - offset;
       auto c = 0.0;
       for(auto i = num_bins; i > 0; i--) {
-        // Determine whether this is a boundary of an unrolled category
-        // if it's a multiple of the width between minimum NN score and 1.0.
         auto low_edge = shape.GetBinLowEdge(i);
-        auto is_boundary = fabs(fmod(low_edge - offset, width)) < tolerance ? true : false;
         c += shape.GetBinContent(i);
-        if (is_boundary) { // If the lower edge is a boundary, set a bin edge.
-          if (c <= threshold && !(fabs(fmod(binning[0] - offset, width)) < tolerance || fabs(fmod(binning[0] - offset, width)) - width < tolerance)) { // Special case: If this bin is at a boundary but it is below the threshold and the bin above is not again a boundary, merge to the right.
-            binning.erase(binning.begin());
-          }
+        if (c > threshold) { // Set lower edge if the bin content is above the threshold.
           binning.insert(binning.begin(), low_edge);
           c = 0.0;
-        } else { // If this is not a boundary, check whether the content is above the threshold.
-          if (c > threshold) { // Set lower edge if the bin content is above the threshold.
-            binning.insert(binning.begin(), low_edge);
-            c = 0.0;
-          }
         }
+      }
+      if (binning.size() == 1){ // catching case, if the total yield of the histogram is smaller then threshold.
+        binning.insert(binning.begin(), shape.GetBinLowEdge(1));
       }
       cb.cp().bin({b}).VariableRebin(binning);
     }
-    // blind subcategories with to little events
+    // Remove categories with too little events, if specified
     for (auto b : cb.cp().bin_set()) {
-      // Get shape of this category with sum of backgrounds
-      auto shape = cb.cp().bin({b}).backgrounds().GetShape();
-      const auto num_bins = shape.GetNbinsX();
-      for(auto i = num_bins; i > 0; i--) {
-        if(shape.GetBinContent(i) < threshold){
-          std::cout << "[INFO] Blind bin " << i << " in " << b << " due to insufficient population!" << "\n";
-          cb.cp().bin({b}).ForEachProc([i](ch::Process *p) {
-            auto newhist = p->ClonedShape();
-            newhist->SetBinContent(i, 0.0);
-            newhist->SetBinError(i, 0.0);
-            p->set_shape(std::move(newhist), false);
-          });
-          cb.cp().bin({b}).ForEachObs([i](ch::Observation *p) {
-            auto newhist = p->ClonedShape();
-            newhist->SetBinContent(i, 0.0);
-            newhist->SetBinError(i, 0.0);
-            p->set_shape(std::move(newhist), false);
-          });
-          cb.cp().bin({b}).ForEachSyst([i](ch::Systematic *s) {
-            if (s->type().find("shape") == std::string::npos)
-                return;
-            auto newhist_u = s->ClonedShapeU();
-            auto newhist_d = s->ClonedShapeD();
-            newhist_u->SetBinContent(i, 0.0);
-            newhist_u->SetBinError(i, 0.0);
-            newhist_d->SetBinContent(i, 0.0);
-            newhist_d->SetBinError(i, 0.0);
-            s->set_shapes(std::move(newhist_u), std::move(newhist_d), nullptr);
-          });
-        }
+      // Get yield of all backgrounds in this category
+      float shape_integral = cb.cp().bin({b}).backgrounds().GetShape().Integral();
+      if(shape_integral < threshold && remove_empty_categories){
+        std::cout << "[WARNING] Remove category " << b << " due to insufficient population!" << "\n";
+      }
+      else {
+        cats_to_keep.push_back(b);
       }
     }
   }
+  else {
+    for (auto b : cb.cp().bin_set()) {
+        cats_to_keep.push_back(b);
+    }
+  }
+  cb = cb.bin(cats_to_keep);
 
   if(manual_rebin_for_yields) {
     for(auto b : cb.cp().bin_set()) {
