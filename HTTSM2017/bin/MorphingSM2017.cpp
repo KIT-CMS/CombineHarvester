@@ -426,11 +426,11 @@ int main(int argc, char **argv) {
       auto signal_shape = cb.cp().bin({b}).signals().GetShape();
       auto total_procs_shape = cb.cp().bin({b}).data().GetShape();
       total_procs_shape.Scale(0.0);
-      bool no_signal = signal_shape.GetNbinsX() == 1 and signal_shape.Integral() == 0.0;
-      bool no_background = background_shape.GetNbinsX() == 1 and background_shape.Integral() == 0.0;
+      bool no_signal = (signal_shape.GetNbinsX() == 1 && signal_shape.Integral() == 0.0);
+      bool no_background = (background_shape.GetNbinsX() == 1 && background_shape.Integral() == 0.0);
       if(no_signal && no_background)
       {
-        std::cout << "\t[WARNING] No signal  and no background available in bin " << b << std::endl;
+        std::cout << "\t[WARNING] No signal and no background available in bin " << b << std::endl;
       }
       else if(no_background)
       {
@@ -439,8 +439,12 @@ int main(int argc, char **argv) {
       }
       else if(no_signal)
       {
-        total_procs_shape = total_procs_shape + background_shape;
         std::cout << "\t[WARNING] No signal available in bin " << b << std::endl;
+        total_procs_shape = total_procs_shape + background_shape;
+      }
+      else
+      {
+        total_procs_shape = total_procs_shape + background_shape + signal_shape;
       }
       cb.cp().bin({b}).ForEachObs([&](ch::Observation *obs) {
         obs->set_shape(total_procs_shape,true);
