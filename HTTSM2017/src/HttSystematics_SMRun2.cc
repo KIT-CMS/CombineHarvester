@@ -25,20 +25,43 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
   // ##########################################################################
 
   // Signal processes
+      // ggH
+      // VBF
   std::vector<std::string> signals_ggH = {
       // STXS stage 0
       "ggH",
-      // STXS stage 1
-      "ggH_0J", "ggH_1J_PTH_0_60", "ggH_1J_PTH_60_120", "ggH_1J_PTH_120_200",
-      "ggH_1J_PTH_GT200", "ggH_GE2J_PTH_0_60", "ggH_GE2J_PTH_60_120",
-      "ggH_GE2J_PTH_120_200", "ggH_GE2J_PTH_GT200", "ggH_VBFTOPO_JET3VETO",
-      "ggH_VBFTOPO_JET3"};
+      // STXS stage 1.1
+      "ggH_GG2H_FWDH",
+      "ggH_GG2H_PTH_GT200",
+      "ggH_GG2H_0J_PTH_0_10",
+      "ggH_GG2H_0J_PTH_GT10",
+      "ggH_GG2H_1J_PTH_0_60",
+      "ggH_GG2H_1J_PTH_60_120",
+      "ggH_GG2H_1J_PTH_120_200",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_0_60",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_60_120",
+      "ggH_GG2H_GE2J_MJJ_0_350_PTH_120_200",
+      "ggH_GG2H_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_0_25",
+      "ggH_GG2H_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_GT25",
+      "ggH_GG2H_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_0_25",
+      "ggH_GG2H_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_GT25",
+      };
   std::vector<std::string> signals_qqH = {
       // STXS stage 0
       "qqH",
       // STXS stage 1
-      "qqH_VBFTOPO_JET3VETO", "qqH_VBFTOPO_JET3", "qqH_REST",
-      "qqH_PTJET1_GT200", "qqH_VH2JET"};
+      "qqH_QQ2HQQ_FWDH",
+      "qqH_QQ2HQQ_0J",
+      "qqH_QQ2HQQ_1J",
+      "qqH_QQ2HQQ_GE2J_MJJ_0_60",
+      "qqH_QQ2HQQ_GE2J_MJJ_60_120",
+      "qqH_QQ2HQQ_GE2J_MJJ_120_350",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT350_PTH_GT200",
+      "qqH_QQ2HQQ_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_0_25",
+      "qqH_QQ2HQQ_GE2J_MJJ_350_700_PTH_0_200_PTHJJ_GT25",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_0_25",
+      "qqH_QQ2HQQ_GE2J_MJJ_GT700_PTH_0_200_PTHJJ_GT25"
+      };
   std::vector<std::string> signals_VH = {
       // STXS stage 0
       "WH125", "ZH125", "ttH125"};
@@ -847,6 +870,7 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
   // - Gluon-fusion WG1 uncertainty scheme:
   //   https://twiki.cern.ch/twiki/bin/view/CMS/HiggsWG/SignalModelingTools
   // Notes:
+  // - FIXME: WG1 scheme currently NOT applied to ggHWW -> on purpose?
   // - FIXME: Add TopMassTreatment from HIG-16043 uncertainty model
   // - FIXME: Compare to HIG-16043 uncertainty model:
   //           - PDF uncertainties splitted by category?
@@ -871,15 +895,15 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
       .AddSyst(cb, "BR_htt_PU_alphas", "lnN", SystMap<>::init(1.0062));
   // Uncertainty on branching ratio for HWW at 125 GeV
   cb.cp()
-     .channel({"em"})
+      .channel({"et", "mt", "tt", "em"})
      .process(JoinStr({signals_ggHToWW,signals_qqHToWW}))
      .AddSyst(cb, "BR_hww_THU", "lnN", SystMap<>::init(1.0099));   
   cb.cp()
-     .channel({"em"})
+      .channel({"et", "mt", "tt", "em"})
      .process(JoinStr({signals_ggHToWW,signals_qqHToWW}))
      .AddSyst(cb, "BR_hww_PU_mq", "lnN", SystMap<>::init(1.0099));
   cb.cp()
-     .channel({"em"})
+      .channel({"et", "mt", "tt", "em"})
      .process(JoinStr({signals_ggHToWW,signals_qqHToWW}))
      .AddSyst(cb, "BR_hww_PU_alphas", "lnN", SystMap<>::init(1.0066));
   // QCD scale
