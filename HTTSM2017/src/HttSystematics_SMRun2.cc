@@ -116,11 +116,12 @@ void AddSMRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding, b
   // Notes:
   // - FIXME: assumed as uncorrelated accross the years for now, what is the recommendation?
   // ##########################################################################
-
+  if (era != 2018) {
   cb.cp()
       .channel({"et", "mt", "tt", "em"})
       .process(mc_processes)
       .AddSyst(cb, "CMS_prefiring_$ERA", "shape", SystMap<>::init(1.00));
+  }
 
   // ##########################################################################
   // Uncertainty: Trigger efficiency

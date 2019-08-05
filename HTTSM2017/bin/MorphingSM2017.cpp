@@ -115,8 +115,15 @@ int main(int argc, char **argv) {
   // Define background processes
   map<string, VString> bkg_procs;
   VString bkgs, bkgs_em;
-  bkgs = {"W", "ZTT", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL", "WH125", "ZH125", "ttH125", "ggHWW125", "qqHWW125"};
-  bkgs_em = {"W", "ZTT", "TTT","VVT", "QCD", "ZL", "TTL", "VVL", "WH125", "ZH125", "ttH125", "ggHWW125", "qqHWW125"};
+  bkgs = {"W", "ZTT", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL", "WH125", "ZH125", "ttH125"};
+  bkgs_em = {"W", "ZTT", "TTT","VVT", "QCD", "ZL", "TTL", "VVL", "WH125", "ZH125", "ttH125"};
+
+  if (era != 2018) {
+    bkgs = JoinStr({bkgs,{"ggHWW125", "qqHWW125"}});
+    bkgs_em = JoinStr({bkgs_em,{"ggHWW125", "qqHWW125"}});
+  }
+     
+
   if(embedding){
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "ZTT"), bkgs.end());
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "TTT"), bkgs.end());
@@ -321,6 +328,8 @@ int main(int argc, char **argv) {
   std::string era_tag;
   if (era == 2016) era_tag = "Run2016";
   else if (era == 2017) era_tag = "Run2017";
+  else if (era == 2018) era_tag = "Run2018";
+
   else std::runtime_error("Given era is not implemented.");
 
   for (auto chn : chns) {
