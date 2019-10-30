@@ -40,6 +40,7 @@ int main(int argc, char **argv) {
   string output_folder = "sm_run2";
   string base_path = string(getenv("CMSSW_BASE")) + "/src/CombineHarvester/TauID2017/shapes";
   string input_folder_mt = "Vienna/";
+  string input_folder_mm = "Vienna/";
   string chan = "all";
   string postfix = "-ML";
   bool regional_jec = true;
@@ -52,15 +53,14 @@ int main(int argc, char **argv) {
   bool classic_bbb = false;
   bool binomial_bbb = false;
   bool verbose = false;
-  string stxs_signals = "stxs_stage0"; // "stxs_stage0" or "stxs_stage1"
-  string categories = "stxs_stage0"; // "stxs_stage0", "stxs_stage1" or "gof"
-  string gof_category_name = "gof";
+  string categories = "pt_binned"; // "pt_binned", "ptdm_binned"
   int era = 2016; // 2016 or 2017
   po::variables_map vm;
   po::options_description config("configuration");
   config.add_options()
       ("base_path", po::value<string>(&base_path)->default_value(base_path))
       ("input_folder_mt", po::value<string>(&input_folder_mt)->default_value(input_folder_mt))
+      ("input_folder_mm", po::value<string>(&input_folder_mm)->default_value(input_folder_mm))
       ("postfix", po::value<string>(&postfix)->default_value(postfix))
       ("channel", po::value<string>(&chan)->default_value(chan))
       ("auto_rebin", po::value<bool>(&auto_rebin)->default_value(auto_rebin))
@@ -70,9 +70,7 @@ int main(int argc, char **argv) {
       ("real_data", po::value<bool>(&real_data)->default_value(real_data))
       ("verbose", po::value<bool>(&verbose)->default_value(verbose))
       ("output_folder", po::value<string>(&output_folder)->default_value(output_folder))
-      ("stxs_signals", po::value<string>(&stxs_signals)->default_value(stxs_signals))
       ("categories", po::value<string>(&categories)->default_value(categories))
-      ("gof_category_name", po::value<string>(&gof_category_name)->default_value(gof_category_name))
       ("jetfakes", po::value<bool>(&jetfakes)->default_value(jetfakes))
       ("embedding", po::value<bool>(&embedding)->default_value(embedding))
       ("classic_bbb", po::value<bool>(&classic_bbb)->default_value(classic_bbb))
@@ -90,13 +88,18 @@ int main(int argc, char **argv) {
   VString chns;
   if (chan.find("mt") != std::string::npos)
     chns.push_back("mt");
+  if (chan.find("mm") != std::string::npos)
+    chns.push_back("mm");
   if (chan == "all")
-    chns = {"mt"};
+    chns = {"mt", "mm"};
 
   // Define background processes
   map<string, VString> bkg_procs;
-  VString bkgs, bkgs_em;
+  VString bkgs, bkgs_mm;
   bkgs = {"W", "QCD", "ZL", "ZJ", "TTT", "TTL", "TTJ", "VVJ", "VVT", "VVL"};
+  bkgs_mm = {"W", "ZLL", "TT", "VV"};
+  // bkgs_mm = {"W", "TT", "VV"};
+
   if(embedding){
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "TTT"), bkgs.end());
     bkgs.erase(std::remove(bkgs.begin(), bkgs.end(), "VVT"), bkgs.end());
@@ -112,58 +115,65 @@ int main(int argc, char **argv) {
 
   std::cout << "[INFO] Considerung the following processes:\n";
   if (chan.find("mt") != std::string::npos) {
-    std::cout << "For et,mt,tt channels : \n";
+    std::cout << "For mt channel : \n";
     for (unsigned int i=0; i < bkgs.size(); i++) std::cout << bkgs[i] << std::endl;
   }
+  if (chan.find("mm") != std::string::npos) {
+    std::cout << "For mm channel : \n";
+    for (unsigned int i=0; i < bkgs_mm.size(); i++) std::cout << bkgs_mm[i] << std::endl;
+  }
   bkg_procs["mt"] = bkgs;
+  bkg_procs["mm"] = bkgs_mm;
 
   // Define categories
   map<string, Categories> cats;
   // TODO: Introduce maps for decay mode dependent splitting.
-  // STXS stage 0 categories (optimized on ggH and VBF)
-  if(categories == "stxs_stage0"){
-     cats["mt"] = {
-        {1, "mt_Pt20to25"},
-        {2, "mt_Pt25to30"},
-        {3, "mt_Pt30to35"},
-        {4, "mt_Pt35to40"},
-        {5, "mt_Pt40to50"},
-        {6, "mt_Pt50to70"},
-        {7, "mt_PtGt70"},
+  if (categories == "inclusive"){
+    cats["mt"] = {
+      {  1, "mt_Inclusive"},
+    };
+  }
+  else if(categories == "pt_binned"){
+   cats["mt"] = {
+      {1, "mt_Pt20to25"},
+      {2, "mt_Pt25to30"},
+      {3, "mt_Pt30to35"},
+      {4, "mt_Pt35to40"},
+      {5, "mt_Pt40to50"},
+      {6, "mt_Pt50to70"},
+      {7, "mt_PtGt70"},
     };
   }
   // STXS stage 1 categories (optimized on STXS stage 1 splits of ggH and VBF)
-  else if(categories == "stxs_stage1"){
+  else if(categories == "ptdm_binned"){
      cats["mt"] = {
-        { 1, "mt_Pt20to25DM0"},
-        { 2, "mt_Pt20to25DM1"},
-        { 3, "mt_Pt20to25DM10"},
-        { 4, "mt_Pt25to30DM0"},
-        { 5, "mt_Pt25to30DM1"},
-        { 6, "mt_Pt25to30DM10"},
-        { 7, "mt_Pt30to35DM0"},
-        { 8, "mt_Pt30to35DM1"},
-        { 9, "mt_Pt30to35DM10"},
-        {10, "mt_Pt35to40DM0"},
-        {11, "mt_Pt35to40DM1"},
-        {12, "mt_Pt35to40DM10"},
-        {13, "mt_Pt40to50DM0"},
-        {14, "mt_Pt40to50DM1"},
-        {15, "mt_Pt40to50DM10"},
-        {16, "mt_Pt50to70DM0"},
-        {17, "mt_Pt50to70DM1"},
-        {18, "mt_Pt50to70DM10"},
-        {19, "mt_PtGt70DM0"},
-        {20, "mt_PtGt70DM1"},
-        {21, "mt_PtGt70DM10"},
-    };
-  }
-  else if(categories == "gof"){
-    cats["mt"] = {
-        { 100, gof_category_name.c_str() },
+        { 1, "mt_Pt20to25_DM0"},
+        { 2, "mt_Pt20to25_DM1"},
+        { 3, "mt_Pt20to25_DM10"},
+        { 4, "mt_Pt25to30_DM0"},
+        { 5, "mt_Pt25to30_DM1"},
+        { 6, "mt_Pt25to30_DM10"},
+        { 7, "mt_Pt30to35_DM0"},
+        { 8, "mt_Pt30to35_DM1"},
+        { 9, "mt_Pt30to35_DM10"},
+        {10, "mt_Pt35to40_DM0"},
+        {11, "mt_Pt35to40_DM1"},
+        {12, "mt_Pt35to40_DM10"},
+        {13, "mt_Pt40to50_DM0"},
+        {14, "mt_Pt40to50_DM1"},
+        {15, "mt_Pt40to50_DM10"},
+        {16, "mt_Pt50to70_DM0"},
+        {17, "mt_Pt50to70_DM1"},
+        {18, "mt_Pt50to70_DM10"},
+        {19, "mt_PtGt70_DM0"},
+        {20, "mt_PtGt70_DM1"},
+        {21, "mt_PtGt70_DM10"},
     };
   }
   else throw std::runtime_error("Given categorization is not known.");
+  cats["mm"] = {
+    {100, "mm_control"},
+  };
 
   // Specify signal processes and masses
   vector<string> sig_procs;
@@ -202,9 +212,19 @@ int main(int argc, char **argv) {
     cb.cp().channel({chn}).backgrounds().ExtractShapes(
         input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
         "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC");
-    cb.cp().channel({chn}).process(sig_procs).ExtractShapes(
-        input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
-        "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC");
+    if (chn == "mt") {
+        for (unsigned int i = 1; i <= cats[chn].size(); i++){
+            cb.cp().channel({chn}).bin_id({static_cast<int>(i)}).process(sig_procs).ExtractShapes(
+                input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
+                "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC");
+        }
+    }
+    // TODO: Uncomment for check of mm fit to obtain start value for full fit.
+    // if (chn == "mm") {
+    //     cb.cp().channel({chn}).bin_id({static_cast<int>(100)}).process(sig_procs).ExtractShapes(
+    //         input_dir[chn] + "htt_" + chn + ".inputs-sm-" + era_tag + postfix + ".root",
+    //         "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC");
+    // }
   }
 
   // Delete processes with 0 yield
@@ -420,14 +440,14 @@ int main(int argc, char **argv) {
   // make one directory per chn-cat, one per chn and cmb. In this code we only
   // store the individual datacards for each directory to be combined later.
   string output_prefix = "output/";
-  ch::CardWriter writer(output_prefix + output_folder + "/$TAG/$MASS/$BIN.txt",
+  ch::CardWriter writer(output_prefix + output_folder + "/$TAG/$BIN.txt",
                         output_prefix + output_folder +
-                            "/$TAG/common/htt_input_" + era_tag + ".root");
+                            "/$TAG/htt_input_" + era_tag + ".root");
 
   // We're not using mass as an identifier - which we need to tell the
   // CardWriter
   // otherwise it will see "*" as the mass value for every object and skip it
-  //    writer.SetWildcardMasses({});
+  writer.SetWildcardMasses({});
 
   // Set verbosity
   if (verbose)
@@ -437,7 +457,16 @@ int main(int argc, char **argv) {
   writer.WriteCards("cmb", cb);
 
   for (auto chn : chns) {
-    writer.WriteCards(chn, cb.cp().channel({chn}));
+    if (chn == std::string("mm"))
+    {
+        continue;
+    }
+    writer.WriteCards(chn, cb.cp().channel({chn,"mm"}));
+    // per-category
+    for (auto cat: cats[chn])
+    {
+        writer.WriteCards("htt_"+cat.second, cb.cp().channel({chn, "mm"}).bin_id({cat.first, 100})); //.attr({cat.second,"control"}, "cat"));
+    }
   }
 
   if (verbose)
