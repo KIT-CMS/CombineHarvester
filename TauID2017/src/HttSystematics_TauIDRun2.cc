@@ -56,7 +56,7 @@ void AddTauIDRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding
   }
 
   cb.cp()
-      .channel({"mt"})
+      .channel({"mt", "mm"})
       .process(mc_processes)
       .AddSyst(cb, "lumi_$ERA", "lnN", SystMap<>::init(lumi_unc));
 
@@ -98,6 +98,12 @@ void AddTauIDRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding
       .process(JoinStr({mc_processes, {"EMB"}}))
       .AddSyst(cb, "CMS_eff_m", "lnN", SystMap<>::init(1.014));
 
+  // Control region uncertainties
+  // TODO: Check how to correlate with embedded if embedded is used
+  cb.cp()
+      .channel({"mm"})
+      .process(mc_processes)
+      .AddSyst(cb, "CMS_eff_mc_m", "lnN", SystMap<>::init(1.04));
 
   // ##########################################################################
   // Uncertainty: b-tag and mistag efficiency
@@ -257,18 +263,18 @@ void AddTauIDRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding
 
   // VV
   cb.cp()
-      .channel({"mt"})
+      .channel({"mt", "mm"})
       .process({"VVT", "VVJ", "VVL", "VV"})
       .AddSyst(cb, "CMS_htt_vvXsec", "lnN", SystMap<>::init(1.06));
 
   // TT
   cb.cp()
-      .channel({"mt"})
+      .channel({"mt", "mm"})
       .process({"TTT", "TTL", "TTJ", "TT"})
       .AddSyst(cb, "CMS_htt_tjXsec", "lnN", SystMap<>::init(1.055));
 
   cb.cp()
-      .channel({"mt"})
+      .channel({"mt", "mm"})
       .process({"ST"})
       .AddSyst(cb, "CMS_htt_stXsec", "lnN", SystMap<>::init(1.055));
 
@@ -277,12 +283,21 @@ void AddTauIDRun2Systematics(CombineHarvester &cb, bool jetfakes, bool embedding
       .channel({"mt"})
       .process({"W"})
       .AddSyst(cb, "CMS_htt_wjXsec", "lnN", SystMap<>::init(1.05));
+  // TODO: Check if this really should be uncorrelated
+  cb.cp()
+      .channel({"mm"})
+      .process({"W"})
+      .AddSyst(cb, "CMS_htt_wjXsec_mm", "lnN", SystMap<>::init(1.05));
 
   // Z
   cb.cp()
       .channel({"mt"})
       .process({"ZTT", "ZL", "ZJ"})
-      .AddSyst(cb, "CMS_htt_zjXsec", "lnN", SystMap<>::init(1.02));
+      .AddSyst(cb, "CMS_htt_zjXsec", "rateParam", SystMap<>::init(0.976460));
+  cb.cp()
+      .channel({"mm"})
+      .process({"ZLL"})
+      .AddSyst(cb, "CMS_htt_zjXsec", "rateParam", SystMap<>::init(0.976460));
 
   // QCD
   cb.cp()
