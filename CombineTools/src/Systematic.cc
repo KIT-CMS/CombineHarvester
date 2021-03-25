@@ -120,13 +120,16 @@ void Systematic::set_shapes(std::unique_ptr<TH1> shape_u,
   shape_u_->SetDirectory(0);
   shape_d_->SetDirectory(0);
 
-  if (nominal && nominal->Integral() > 0.) {
+  //if (nominal && nominal->Integral() > 0.) {
+  if (nominal && nominal->Integral() != 0.) {
     this->set_value_u(shape_u_->Integral() / nominal->Integral());
     this->set_value_d(shape_d_->Integral() / nominal->Integral());
   }
 
-  if (shape_u_->Integral() > 0.) shape_u_->Scale(1. / shape_u_->Integral());
-  if (shape_d_->Integral() > 0.) shape_d_->Scale(1. / shape_d_->Integral());
+  //if (shape_u_->Integral() > 0.) shape_u_->Scale(1. / shape_u_->Integral());
+  //if (shape_d_->Integral() > 0.) shape_d_->Scale(1. / shape_d_->Integral());
+  if (shape_u_->Integral() != 0.) shape_u_->Scale(1. / shape_u_->Integral());
+  if (shape_d_->Integral() != 0.) shape_d_->Scale(1. / shape_d_->Integral());
 }
 
 void Systematic::set_shapes(TH1 const& shape_u, TH1 const& shape_d,

@@ -317,8 +317,13 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
       // histogram to a uniform integer binning, because this is what
       // text2workspace will do for all the non-morphed processes in our datacard,
       // and we need the binning of these to be in sync.
+      //hist_arr[mi][0] =
+      //    std::make_shared<TH1F>(AsTH1F(pr_arr[mi]->ClonedScaledShape().get()));
+      auto hist = AsTH1F(pr_arr[mi]->ClonedScaledShape().get());
+      bool negative = hist.Integral()<0.;
+      if (negative) hist.Scale(-1);
       hist_arr[mi][0] =
-          std::make_shared<TH1F>(AsTH1F(pr_arr[mi]->ClonedScaledShape().get()));
+          std::make_shared<TH1F>(hist);
       if (rebin_) *hist_arr[mi][0] = RebinHist(*hist_arr[mi][0]);
       if (m > 1) {
         for (int b = 1; b < hist_arr[mi][0]->GetNbinsX() + 1; ++b) {
@@ -331,7 +336,10 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
       //   file->WriteTObject(pr_arr[mi]->shape(), key + "_" + m_str_vec[mi]);
       // }
       // Store the process rate
-      rate_arr[mi] = 1.;
+      // if histogram integral is 0 scale it +ve then change the rate to -1
+      
+      if(negative) rate_arr[mi] = -1.;
+      else rate_arr[mi] = 1.;
       // auto proc_hist = pr_arr[mi]->ClonedScaledShape();
       // proc_hist->IntegralAndError(1, proc_hist->GetNbinsX(), rate_unc_arr[mi]);
       // Do the same for the Up and Down shapes
@@ -474,6 +482,8 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
                           force_template_limit ? new_m_vec.data() : m_vec.data(),
                           force_template_limit ? new_rate_arr.data() : rate_arr.data(),
                           interp);
+
+ 
     // if (file) {
     //   TGraphErrors tmp(m, m_vec.data(), rate_arr.data(), nullptr, rate_unc_arr.data());
     //   file->WriteTObject(&tmp, "interp_rate_"+key);
