@@ -336,8 +336,7 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
       //   file->WriteTObject(pr_arr[mi]->shape(), key + "_" + m_str_vec[mi]);
       // }
       // Store the process rate
-      // if histogram integral is 0 scale it +ve then change the rate to -1
-      
+      // if histogram integral was origionally negative and scaled to be +ve then change the rate to -1 to account for the different sign
       if(negative) rate_arr[mi] = -1.;
       else rate_arr[mi] = 1.;
       // auto proc_hist = pr_arr[mi]->ClonedScaledShape();
@@ -482,8 +481,6 @@ void CMSHistFuncFactory::RunSingleProc(CombineHarvester& cb, RooWorkspace& ws,
                           force_template_limit ? new_m_vec.data() : m_vec.data(),
                           force_template_limit ? new_rate_arr.data() : rate_arr.data(),
                           interp);
-
- 
     // if (file) {
     //   TGraphErrors tmp(m, m_vec.data(), rate_arr.data(), nullptr, rate_unc_arr.data());
     //   file->WriteTObject(&tmp, "interp_rate_"+key);
