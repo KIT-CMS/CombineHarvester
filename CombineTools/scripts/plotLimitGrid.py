@@ -319,6 +319,11 @@ if mh122_contours is not None and len(mh122_contours)>0:
     #legend2 = plot.PositionedLegend(0.4, 0.11, 3, 0.015)
     legend2.AddEntry(mh122_contours[0], "{MASSTITLE}^{MSSM} #neq 125 #pm 3 GeV".replace("{MASSTITLE}",args.mass_histogram_title),"F")
     legend2.Draw()
+elif mh128_contours is not None and len(mh128_contours)>0:
+    legend2 = ROOT.TLegend(0.6, 0.18 , 0.92, 0.23, '', 'NBNDC')
+    #legend2 = plot.PositionedLegend(0.4, 0.11, 3, 0.015)
+    legend2.AddEntry(mh128_contours[0], "{MASSTITLE}^{MSSM} #neq 125 #pm 3 GeV".replace("{MASSTITLE}",args.mass_histogram_title),"F")
+    legend2.Draw()
 
 
 # Draw the scenario label
