@@ -78,7 +78,10 @@ parser.add_argument(
     exclusion""")
 parser.add_argument(
     '--mass_histogram', default="m_h", help="""Specify histogram to extract
-     mh exclusion from""")
+     sm-like mass exclusion from""")
+parser.add_argument(
+    '--mass_histogram_title', default="m_{h}", help="""Specify histogram mass title
+    for sm-like mass exclusion""")
 args = parser.parse_args()
 
 
@@ -314,7 +317,7 @@ pads[1].RedrawAxis()
 if mh122_contours is not None and len(mh122_contours)>0:
     legend2 = ROOT.TLegend(0.6, 0.18 , 0.92, 0.23, '', 'NBNDC')
     #legend2 = plot.PositionedLegend(0.4, 0.11, 3, 0.015)
-    legend2.AddEntry(mh122_contours[0], "m_{h}^{MSSM} #neq 125 #pm 3 GeV","F")
+    legend2.AddEntry(mh122_contours[0], "{MASSTITLE}^{MSSM} #neq 125 #pm 3 GeV".format(MASSTITLE=args.mass_histogram_title),"F")
     legend2.Draw()
 
 
