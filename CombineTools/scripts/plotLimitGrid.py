@@ -149,7 +149,10 @@ if h_mh is not None:
   h_mh_inverted = h_mh.Clone("mhInverted")
   for i in range(1,h_mh.GetNbinsX()+1):
      for j in range(1, h_mh.GetNbinsY()+1):
-         h_mh_inverted.SetBinContent(i,j,1-(1./h_mh.GetBinContent(i,j)))
+        if h_mh.GetBinContent(i,j) > 0:
+             h_mh_inverted.SetBinContent(i,j,1-(1./h_mh.GetBinContent(i,j)))
+        else:
+             h_mh_inverted.SetBinContent(i,j,0.)
   mh122_contours = plot.contourFromTH2(h_mh_inverted, (1-1./122), 5, frameValue=1)
   mh128_contours = plot.contourFromTH2(h_mh, 128, 5, frameValue=1)
 else : 
